@@ -1245,6 +1245,26 @@ h2, h3 { font-family: var(--font-subheading); letter-spacing: 0.5px; }
 
 .auth-modal .btn { width: 100%; }
 
+.auth-modal-consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  margin: -8px 0 20px;
+  cursor: pointer;
+}
+
+.auth-modal-consent input {
+  margin-top: 3px;
+  flex-shrink: 0;
+}
+
+.auth-modal-consent a {
+  color: var(--gold);
+  text-decoration: underline;
+}
+
 .auth-account-panel { text-align: center; }
 
 .auth-account-panel p { color: var(--ink-soft); margin-bottom: 24px; }

@@ -90,6 +90,10 @@ function buildModal() {
             <label for="auth-signup-password-confirm">Confirm Password</label>
             <input type="password" id="auth-signup-password-confirm" autocomplete="new-password" minlength="6" required>
           </div>
+          <label class="auth-modal-consent">
+            <input type="checkbox" id="auth-signup-consent" required>
+            <span>I agree to the <a href="terms.html" target="_blank" rel="noopener">Terms &amp; Conditions</a></span>
+          </label>
           <button type="submit" class="btn btn-primary">Create My Free Account</button>
         </form>
 
