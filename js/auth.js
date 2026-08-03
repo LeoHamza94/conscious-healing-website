@@ -252,6 +252,7 @@ function initAuthModal(triggers) {
   });
 
   return {
+    openModal,
     onAuthState(user) {
       if (user) {
         signupView.style.display = "none";
@@ -281,11 +282,23 @@ function applyGating(user) {
 
 function init() {
   const triggers = document.querySelectorAll(".member-auth-trigger");
+  const loginTriggers = document.querySelectorAll(".header-login-trigger");
   triggers.forEach((trigger) => {
     trigger.dataset.originalText = trigger.textContent;
   });
 
-  const modal = triggers.length ? initAuthModal(triggers) : null;
+  const modal = triggers.length || loginTriggers.length ? initAuthModal(triggers) : null;
+
+  loginTriggers.forEach((trigger) => {
+    trigger.addEventListener("click", (e) => {
+      e.preventDefault();
+      if (auth.currentUser) {
+        signOut(auth);
+      } else if (modal) {
+        modal.openModal();
+      }
+    });
+  });
 
   onAuthStateChanged(auth, (user) => {
     applyGating(user);
@@ -300,6 +313,10 @@ function init() {
       } else {
         trigger.textContent = trigger.dataset.originalText;
       }
+    });
+
+    loginTriggers.forEach((trigger) => {
+      trigger.textContent = user ? "Log Out" : "Log In";
     });
   });
 }
