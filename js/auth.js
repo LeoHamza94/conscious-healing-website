@@ -29,16 +29,35 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// Creates the member's Firestore record on signup. `emailListStatus` starts as
-// "pending" — actual enrollment into the herb-of-the-week / promotions list
-// depends on which email platform gets chosen (Mailchimp, ConvertKit, etc.),
-// which is not yet decided. That sync is a follow-up once a provider is picked.
-async function createMemberRecord(user, name) {
+const CONVERTKIT_API_KEY = "tr-gXvFU7q4vOl0Fnw9w9Q";
+const CONVERTKIT_FORM_ID = "f6a607dc5a";
+
+// Subscribes a new member's email to the "Conscious-Healing Members" Kit
+// form (Herb of the Week, video announcements, promotions). Uses Kit's
+// public v3 "api_key" (not the private "api_secret") — Kit's own docs
+// confirm this key is scoped to write-only actions like this and can't
+// read/list/export subscriber data, so it's safe to call directly from
+// client-side JS, the same way Kit's own embeddable forms do.
+async function subscribeToConvertKit(email) {
+  const response = await fetch(`https://api.convertkit.com/v3/forms/${CONVERTKIT_FORM_ID}/subscribe`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ api_key: CONVERTKIT_API_KEY, email }),
+  });
+  if (!response.ok) {
+    throw new Error(`ConvertKit subscribe failed with status ${response.status}`);
+  }
+}
+
+// Creates the member's Firestore record on signup. `emailListStatus` reflects
+// whether the Kit subscribe call actually succeeded, so a failure is visible
+// in Firestore (and re-triable later) rather than silently lost.
+async function createMemberRecord(user, name, emailListStatus) {
   await setDoc(doc(db, "members", user.uid), {
     email: user.email,
     displayName: name || user.displayName || "",
     createdAt: serverTimestamp(),
-    emailListStatus: "pending",
+    emailListStatus,
   });
 }
 
@@ -207,7 +226,16 @@ function initAuthModal(triggers) {
       if (name) {
         await updateProfile(cred.user, { displayName: name });
       }
-      await createMemberRecord(cred.user, name);
+
+      let emailListStatus = "failed";
+      try {
+        await subscribeToConvertKit(email);
+        emailListStatus = "subscribed";
+      } catch (ckErr) {
+        console.error("ConvertKit subscribe failed:", ckErr);
+      }
+
+      await createMemberRecord(cred.user, name, emailListStatus);
       showMessage("signup", "Account created — you're in!", "success");
     } catch (err) {
       showMessage("signup", friendlyError(err), "error");
