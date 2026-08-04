@@ -33,16 +33,20 @@ const CONVERTKIT_API_KEY = "tr-gXvFU7q4vOl0Fnw9w9Q";
 const CONVERTKIT_FORM_ID = "f6a607dc5a";
 
 // Subscribes a new member's email to the "Conscious-Healing Members" Kit
-// form (Herb of the Week, video announcements, promotions). Uses Kit's
-// public v3 "api_key" (not the private "api_secret") — Kit's own docs
-// confirm this key is scoped to write-only actions like this and can't
-// read/list/export subscriber data, so it's safe to call directly from
-// client-side JS, the same way Kit's own embeddable forms do.
+// form (Herb of the Week, video announcements, promotions). Uses Kit's V4
+// API key header (X-Kit-Api-Key) — this key is scoped to write-only actions
+// like this and can't read/list/export subscriber data, so it's safe to
+// call directly from client-side JS, the same way Kit's own embeddable
+// forms do. (The credential and form ID here are Kit's newer V4 style, not
+// the deprecated V3 api_key-in-body scheme.)
 async function subscribeToConvertKit(email) {
-  const response = await fetch(`https://api.convertkit.com/v3/forms/${CONVERTKIT_FORM_ID}/subscribe`, {
+  const response = await fetch(`https://api.kit.com/v4/forms/${CONVERTKIT_FORM_ID}/subscribers`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ api_key: CONVERTKIT_API_KEY, email }),
+    headers: {
+      "Content-Type": "application/json",
+      "X-Kit-Api-Key": CONVERTKIT_API_KEY,
+    },
+    body: JSON.stringify({ email_address: email }),
   });
   if (!response.ok) {
     throw new Error(`ConvertKit subscribe failed with status ${response.status}`);
