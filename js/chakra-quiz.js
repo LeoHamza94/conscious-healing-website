@@ -91,6 +91,67 @@ const CHAKRA_QUIZ_RESULTS = {
   },
 };
 
+// The Three Vitality States narrative (Neurobiology / Tissue Terrain /
+// Biochemical Profile / Experience) — the same content taught in full on
+// chakra-system.html's "Three Vitality States" section, shown here inline
+// for whichever state is most relevant to the visitor's result.
+const CHAKRA_VITALITY_STATES = {
+  balanced: {
+    title: 'The Balanced State (The Harmonized Terrain)',
+    neurobiology: 'The left and right hemispheres of the brain are in perfect synchronization. Nerve signals flow smoothly through the decussation crossover points, and the autonomic nervous system easily shifts between the restful parasympathetic branch (Ida Nadi) and the active sympathetic branch (Pingala Nadi).',
+    tissueTerrain: 'Tissues maintain optimal tone, elasticity, and cellular fluid balance. There is no fluid pooling or dry atrophy.',
+    biochemicalProfile: 'Cell membranes hold a healthy electrical charge (-70mV potential), cellular oxidation rates are stable, and the extracellular matrix is cleanly clearing metabolic waste. Mineral reserves (calcium, magnesium, potassium) are fully intact.',
+    experience: 'High baseline vitality, excellent digestive efficiency, a resonant and clear voice, sharp mental clarity, and a natural emotional resilience that recovers quickly from stress.',
+  },
+  deficient: {
+    title: 'The Deficient State (The Atrophied / High-Vata Terrain)',
+    neurobiology: 'The local nerve plexus (ganglia cluster) has lost its electrical charge or is being blocked by a chronic sympathetic freeze response. Energy is scattering upward and outward, leaving the local physical organs under-stimulated and under-innervated.',
+    tissueTerrain: 'Dry/Atrophy or Cold/Depression. Tissues become thin, brittle, cold, and poorly vascularized due to chronic vasoconstriction.',
+    biochemicalProfile: 'Hypo-functioning states, such as lowered enzyme secretion or hypochlorhydria (insufficient stomach acid). Tissues suffer from cellular dehydration, mineral demineralization, and a lack of essential structural lipids to protect nerve sheaths.',
+    experience: "Manifests physically as cracking joints, dry skin, cold limbs, chronic bloating, shallow breathing, and a weak or cracking voice. Emotionally, it mirrors The Ghost Archetype — marked by anxiety, passivity, spaceyness, and a feeling of being ungrounded or dissociated from the physical body.",
+  },
+  excessive: {
+    title: 'The Excessive State (The Stagnant / Damp-Heat Terrain)',
+    neurobiology: 'The crossover ganglia cluster is trapped in a loop of neurological irritation or hyperactive sympathetic overdrive. The neural pathways are bottlenecked, causing an intense, uncoordinated backup of electrical traffic that overstimulates local organs.',
+    tissueTerrain: 'Fluctuates between Heat/Excitation (inflamed, red, hyper-functioning tissues) and Damp/Stagnation (lax, waterlogged, boggy tissues where metabolic wastes pool).',
+    biochemicalProfile: 'Hyper-functioning or congestive states, including hyperchlorhydria (acid overflow), local tissue inflammation, cellular waste accumulation, and neural excitotoxicity (frantic neurotransmitter firing that burns out cellular antioxidants).',
+    experience: 'Manifests physically as acid reflux, localized tissue swelling or fluid retention, high vascular tension, muscle spasms (like TMJ jaw clenching), and raw, irritated mucous membranes. Emotionally, it mirrors The Tyrant or Megaphone Archetypes — marked by perfectionism, micro-management, emotional volatility, non-stop nervous talking, or mental fog from sensory overload.',
+  },
+};
+
+// The Phytochemical Matrix — generic corrective herb-action rows, keyed by
+// state (not by specific chakra). Restored from the pre-diagnostic-engine
+// version of this page; still selected off the Symptomatic Node's state.
+const CHAKRA_QUIZ_MATRIX = {
+  deficient: {
+    result: 'Deficient',
+    anchor: 'deficient-state',
+    action: 'Moisten, Nourish, &amp; Tonify',
+    constituents: 'Mucilage, Fixed Oils, Saponins',
+    herbs: 'Marshmallow Root, Shatavari, Licorice Root, Flaxseed',
+  },
+  excessiveDamp: {
+    result: 'Excessive (Damp)',
+    anchor: 'excessive-state',
+    action: 'Dry, Drain, &amp; Circulate',
+    constituents: 'Tannins, Volatile Oils, Resins',
+    herbs: 'Cranesbill Root, Calendula, Ginger, Myrrh',
+  },
+  excessiveHeat: {
+    result: 'Excessive (Heat)',
+    anchor: 'excessive-state',
+    action: 'Cool, Sedate, &amp; Clear',
+    constituents: 'Flavonoids, Iridoid Glycosides, Alkaloids',
+    herbs: 'Meadowsweet, Willow Bark, Skullcap, Blue Vervain',
+  },
+};
+
+function buildMatrixRows(state) {
+  if (state === 'deficient') return [CHAKRA_QUIZ_MATRIX.deficient];
+  if (state === 'excessive') return [CHAKRA_QUIZ_MATRIX.excessiveDamp, CHAKRA_QUIZ_MATRIX.excessiveHeat];
+  return []; // balanced — no corrective matrix needed
+}
+
 // Canonical bottom-to-top order — every priority/tie-break rule below walks
 // the chakras in this order.
 const CHAKRA_ORDER = ['root', 'sacral', 'solar-plexus', 'heart', 'throat', 'third-eye', 'crown'];
@@ -302,13 +363,62 @@ function showChakraQuizResults(options) {
 
   const tagEl = document.getElementById('chakra-quiz-result-tag');
   const compositeEl = document.getElementById('chakra-quiz-composite-text');
+  const vitalityWrap = document.getElementById('chakra-quiz-vitality-wrap');
   const matrixWrap = document.getElementById('chakra-quiz-matrix-wrap');
+
+  // The relevant Vitality State for the narrative card is the Symptomatic
+  // Node's own state when imbalanced, or 'balanced' when nothing is.
+  const vitalityKey = priority.allBalanced ? 'balanced' : priority.primary.state;
+  const vitality = CHAKRA_VITALITY_STATES[vitalityKey];
+  vitalityWrap.innerHTML = `
+    <h3>${vitality.title}</h3>
+    <ul class="bio-list">
+      <li><strong>The Neurobiology:</strong> ${vitality.neurobiology}</li>
+      <li><strong>The Tissue Terrain:</strong> ${vitality.tissueTerrain}</li>
+      <li><strong>The Biochemical Profile:</strong> ${vitality.biochemicalProfile}</li>
+      <li><strong>The Experience:</strong> ${vitality.experience}</li>
+    </ul>
+  `;
+
+  function renderPhytochemicalMatrix(state) {
+    const rows = buildMatrixRows(state);
+    if (!rows.length) {
+      return '<p style="text-align:center; color: var(--ink-soft); font-size: 0.95rem;">Your terrain doesn\'t call for active correcting right now — maintenance-focused herbs and steady lifestyle support are enough to keep it there.</p>';
+    }
+    const rowsHtml = rows
+      .map(
+        (r) => `
+      <tr>
+        <td><strong><a href="chakra-system.html#${r.anchor}" style="color: var(--gold); text-decoration: underline;">${r.result}</a></strong></td>
+        <td>${r.action}</td>
+        <td>${r.constituents}</td>
+        <td>${r.herbs}</td>
+      </tr>`
+      )
+      .join('');
+    return `
+      <h3>Phytochemical Matrix</h3>
+      <div class="table-wrap">
+        <table class="info-table">
+          <thead>
+            <tr>
+              <th>Result</th>
+              <th>Key Botanical Action</th>
+              <th>Core Phytochemical Constituents</th>
+              <th>Example Herbs (educational mention only)</th>
+            </tr>
+          </thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>
+      </div>
+    `;
+  }
 
   if (priority.allBalanced) {
     const profile = CHAKRA_QUIZ_RESULTS.balanced;
     tagEl.textContent = profile.title;
     compositeEl.innerHTML = `<p>${profile.text}</p>`;
-    matrixWrap.innerHTML = '<p style="text-align:center; color: var(--ink-soft); font-size: 0.95rem;">Your terrain doesn\'t call for active correcting right now — maintenance-focused herbs and steady lifestyle support are enough to keep it there.</p>';
+    matrixWrap.innerHTML = renderPhytochemicalMatrix('balanced');
   } else {
     const primaryRouting = getRoutingResult(priority.primary.chakraId, priority.primary.state);
 
@@ -331,6 +441,8 @@ function showChakraQuizResults(options) {
         </div>
       `;
     }
+
+    matrixHtml += renderPhytochemicalMatrix(primaryRouting.state);
 
     matrixWrap.innerHTML = matrixHtml;
   }
