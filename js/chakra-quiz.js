@@ -218,13 +218,37 @@ function buildMatrixRows(resultKey) {
   return []; // balanced — no corrective matrix needed
 }
 
-function showChakraQuizResults() {
+// Pass { savedTally, savedResultKey } to render a member's previously saved
+// result (e.g. on page load) without touching the live in-progress answers
+// or re-saving to Firestore. Called with no arguments, it scores whatever is
+// in chakraQuizAnswers, as it always has.
+function showChakraQuizResults(options) {
+  const { savedTally, savedResultKey } = options || {};
+
+  document.getElementById('chakra-quiz-intro').hidden = true;
   document.getElementById('chakra-quiz-quiz').hidden = true;
   const resultsSection = document.getElementById('chakra-quiz-results');
   resultsSection.hidden = false;
 
-  const tally = tallyChakraQuizAnswers();
-  const resultKey = computeChakraQuizResult(tally);
+  const isRestoring = Boolean(savedTally && savedResultKey);
+  let tally, resultKey;
+  if (isRestoring) {
+    tally = savedTally;
+    resultKey = savedResultKey;
+  } else {
+    tally = tallyChakraQuizAnswers();
+    resultKey = computeChakraQuizResult(tally);
+
+    // Members only: save this fresh result so it's waiting for them next
+    // visit. Logged-out visitors are unaffected — nothing is saved, and the
+    // quiz behaves exactly as it did before.
+    if (window.CHMembership && window.CHMembership.currentUser()) {
+      window.CHMembership
+        .saveMemberFields({ chakraQuizResult: resultKey, chakraQuizTally: tally })
+        .catch((err) => console.error('Failed to save chakra quiz result:', err));
+    }
+  }
+
   const profile = CHAKRA_QUIZ_RESULTS[resultKey];
 
   document.getElementById('chakra-quiz-result-tag').textContent = profile.title;
@@ -271,7 +295,12 @@ function showChakraQuizResults() {
     `;
   }
 
-  document.getElementById('chakra-quiz-results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  // Skip the auto-scroll when silently restoring a saved result on page
+  // load — nothing to scroll "down to" since the visitor hasn't clicked
+  // anything yet. Fresh completions still scroll to the results as before.
+  if (!isRestoring) {
+    document.getElementById('chakra-quiz-results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
 }
 
 function resetChakraQuiz() {
@@ -302,6 +331,23 @@ function initChakraQuiz() {
 
   backBtn.addEventListener('click', goToPreviousChakraQuizQuestion);
   retakeBtn.addEventListener('click', resetChakraQuiz);
+
+  // Members only: if they've already taken this quiz, show their saved
+  // result instead of the intro screen. Logged-out visitors are completely
+  // unaffected — this block simply never fires for them.
+  if (window.CHMembership) {
+    window.CHMembership.onReady((user) => {
+      if (!user) return;
+      window.CHMembership
+        .getMemberDoc()
+        .then((data) => {
+          if (data && data.chakraQuizResult && data.chakraQuizTally) {
+            showChakraQuizResults({ savedTally: data.chakraQuizTally, savedResultKey: data.chakraQuizResult });
+          }
+        })
+        .catch((err) => console.error('Failed to load saved chakra quiz result:', err));
+    });
+  }
 }
 
 if (document.readyState === 'loading') {

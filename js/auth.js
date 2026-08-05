@@ -12,6 +12,7 @@ import {
   getFirestore,
   doc,
   setDoc,
+  getDoc,
   serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
 
@@ -298,6 +299,31 @@ function initAuthModal(triggers) {
   };
 }
 
+// Gated content starts hidden (display:none) in the HTML so it fails closed
+// before auth resolves. That means the browser's automatic scroll-to-#anchor
+// on page load happens while the target is still inside a hidden container
+// and silently fails — and nothing retries it once the content is revealed.
+// The first time (and only the first time) gating actually reveals the
+// content — whether that's on load for an already-signed-in member, or after
+// someone logs in mid-session via the modal — retry the scroll so #anchor
+// links into gated pages land on the right section instead of the top of
+// the page.
+let hashScrollHandled = false;
+function retryHashScroll() {
+  if (hashScrollHandled) return;
+  hashScrollHandled = true;
+  if (!window.location.hash) return;
+  let target;
+  try {
+    target = document.querySelector(window.location.hash);
+  } catch (err) {
+    return; // malformed hash — nothing to scroll to
+  }
+  if (target) {
+    target.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+}
+
 function applyGating(user) {
   const gatedContent = document.getElementById("gated-content");
   const gateMessage = document.getElementById("gate-message");
@@ -306,11 +332,58 @@ function applyGating(user) {
   if (user) {
     gatedContent.style.display = "block";
     gateMessage.style.display = "none";
+    retryHashScroll();
   } else {
     gatedContent.style.display = "none";
     gateMessage.style.display = "block";
   }
 }
+
+// ---------------------------------------------------------------------------
+// Membership data API — a small window-level surface so plain (non-module)
+// page scripts, like js/chakra-quiz.js, can read/write the signed-in member's
+// Firestore record without opening a second onAuthStateChanged listener.
+// Everything routes through the one listener already wired up in init().
+// ---------------------------------------------------------------------------
+let authResolved = false;
+const membershipReadyCallbacks = [];
+
+function notifyMembershipReady(user) {
+  membershipReadyCallbacks.forEach((cb) => {
+    try {
+      cb(user);
+    } catch (err) {
+      console.error("CHMembership onReady callback failed:", err);
+    }
+  });
+}
+
+window.CHMembership = {
+  currentUser() {
+    return auth.currentUser;
+  },
+  // Registers a callback that fires once auth state is known, and again on
+  // every subsequent sign-in/out. Fires immediately if auth already resolved
+  // before this was called.
+  onReady(callback) {
+    membershipReadyCallbacks.push(callback);
+    if (authResolved) callback(auth.currentUser);
+  },
+  // Merges the given fields into members/{uid}. Resolves false (no-op) if
+  // nobody is signed in.
+  saveMemberFields(fields) {
+    const user = auth.currentUser;
+    if (!user) return Promise.resolve(false);
+    return setDoc(doc(db, "members", user.uid), fields, { merge: true }).then(() => true);
+  },
+  // Returns the signed-in member's Firestore document, or null if signed out
+  // or the document doesn't exist yet.
+  getMemberDoc() {
+    const user = auth.currentUser;
+    if (!user) return Promise.resolve(null);
+    return getDoc(doc(db, "members", user.uid)).then((snap) => (snap.exists() ? snap.data() : null));
+  },
+};
 
 function init() {
   const triggers = document.querySelectorAll(".member-auth-trigger");
@@ -350,6 +423,9 @@ function init() {
     loginTriggers.forEach((trigger) => {
       trigger.textContent = user ? "Log Out" : "Log In";
     });
+
+    authResolved = true;
+    notifyMembershipReady(user);
   });
 }
 
