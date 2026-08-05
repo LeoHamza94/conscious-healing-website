@@ -106,18 +106,21 @@ const CHAKRA_QUIZ_RESULTS = {
 const CHAKRA_QUIZ_MATRIX = {
   deficient: {
     result: 'Deficient',
+    anchor: 'deficient-state',
     action: 'Moisten, Nourish, &amp; Tonify',
     constituents: 'Mucilage, Fixed Oils, Saponins',
     herbs: 'Marshmallow Root, Shatavari, Licorice Root, Flaxseed',
   },
   excessiveDamp: {
     result: 'Excessive (Damp)',
+    anchor: 'excessive-state',
     action: 'Dry, Drain, &amp; Circulate',
     constituents: 'Tannins, Volatile Oils, Resins',
     herbs: 'Cranesbill Root, Calendula, Ginger, Myrrh',
   },
   excessiveHeat: {
     result: 'Excessive (Heat)',
+    anchor: 'excessive-state',
     action: 'Cool, Sedate, &amp; Clear',
     constituents: 'Flavonoids, Iridoid Glycosides, Alkaloids',
     herbs: 'Meadowsweet, Willow Bark, Skullcap, Blue Vervain',
@@ -229,9 +232,9 @@ function showChakraQuizResults() {
 
   const tallyWrap = document.getElementById('chakra-quiz-tally');
   tallyWrap.innerHTML = `
-    <span class="chakra-quiz-tally-item"><strong>${tally.balanced}</strong> Balanced</span>
-    <span class="chakra-quiz-tally-item"><strong>${tally.deficient}</strong> Deficient</span>
-    <span class="chakra-quiz-tally-item"><strong>${tally.excessive}</strong> Excessive</span>
+    <span class="chakra-quiz-tally-item"><strong>${tally.balanced}</strong> <a href="chakra-system.html#balanced-state" style="color: var(--gold); text-decoration: underline;">Balanced</a></span>
+    <span class="chakra-quiz-tally-item"><strong>${tally.deficient}</strong> <a href="chakra-system.html#deficient-state" style="color: var(--gold); text-decoration: underline;">Deficient</a></span>
+    <span class="chakra-quiz-tally-item"><strong>${tally.excessive}</strong> <a href="chakra-system.html#excessive-state" style="color: var(--gold); text-decoration: underline;">Excessive</a></span>
   `;
 
   const matrixWrap = document.getElementById('chakra-quiz-matrix-wrap');
@@ -243,7 +246,7 @@ function showChakraQuizResults() {
       .map(
         (r) => `
       <tr>
-        <td><strong>${r.result}</strong></td>
+        <td><strong><a href="chakra-system.html#${r.anchor}" style="color: var(--gold); text-decoration: underline;">${r.result}</a></strong></td>
         <td>${r.action}</td>
         <td>${r.constituents}</td>
         <td>${r.herbs}</td>
