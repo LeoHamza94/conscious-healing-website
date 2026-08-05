@@ -267,6 +267,12 @@ function capitalizeState(state) {
   return state.charAt(0).toUpperCase() + state.slice(1);
 }
 
+// Links a chakra's name to its write-up in "The 7 Major Chakras" deep-dive
+// on chakra-system.html (e.g. #root-chakra, #solar-plexus-chakra).
+function chakraLink(chakraId, label) {
+  return `<a href="chakra-system.html#${chakraId}-chakra" style="color: var(--gold); text-decoration: underline;">${label}</a>`;
+}
+
 // Pass { savedStates } to render a member's previously saved per-chakra
 // result (e.g. on page load) without touching the live in-progress answers
 // or re-saving to Firestore. Called with no arguments, it scores whatever is
@@ -306,13 +312,13 @@ function showChakraQuizResults(options) {
   } else {
     const primaryRouting = getRoutingResult(priority.primary.chakraId, priority.primary.state);
 
-    tagEl.textContent = `Symptomatic Node: ${primaryRouting.chakraName} (${capitalizeState(primaryRouting.state)})`;
+    tagEl.innerHTML = `Symptomatic Node: ${chakraLink(primaryRouting.chakraId, primaryRouting.chakraName)} (${capitalizeState(primaryRouting.state)})`;
     compositeEl.innerHTML = `<p>${primaryRouting.rationale}</p>`;
 
     let matrixHtml = `
       <div class="chakra-quiz-routing-card">
         <p class="chakra-quiz-routing-label">Recommended Formula</p>
-        <p class="chakra-quiz-routing-formula">${primaryRouting.formulaName} <span>(Formula ${primaryRouting.formulaNumber})</span></p>
+        <p class="chakra-quiz-routing-formula">${chakraLink(primaryRouting.formulaChakraId, primaryRouting.formulaName)} <span>(Formula ${primaryRouting.formulaNumber})</span></p>
       </div>
     `;
 
@@ -321,7 +327,7 @@ function showChakraQuizResults(options) {
       matrixHtml += `
         <div class="chakra-quiz-secondary">
           <h4>Supporting the Surrounding Terrain</h4>
-          <p>Your ${secondaryRouting.chakraName} chakra scored ${capitalizeState(secondaryRouting.state)} as well. ${secondaryRouting.rationale} You may also want to explore the ${secondaryRouting.formulaName} Formula (Formula ${secondaryRouting.formulaNumber}) as an additional, optional support.</p>
+          <p>Your ${chakraLink(secondaryRouting.chakraId, secondaryRouting.chakraName)} chakra scored ${capitalizeState(secondaryRouting.state)} as well. ${secondaryRouting.rationale} You may also want to explore the ${chakraLink(secondaryRouting.formulaChakraId, secondaryRouting.formulaName)} Formula (Formula ${secondaryRouting.formulaNumber}) as an additional, optional support.</p>
         </div>
       `;
     }
