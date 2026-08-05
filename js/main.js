@@ -50,21 +50,4 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  document.querySelectorAll('.quiz-picker-toggle').forEach((btn) => {
-    const picker = btn.closest('.quiz-picker');
-    if (!picker) return;
-
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const isOpen = picker.classList.toggle('open');
-      btn.setAttribute('aria-expanded', String(isOpen));
-    });
-
-    document.addEventListener('click', (e) => {
-      if (!picker.contains(e.target)) {
-        picker.classList.remove('open');
-        btn.setAttribute('aria-expanded', 'false');
-      }
-    });
-  });
 });
