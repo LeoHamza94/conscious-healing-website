@@ -1391,6 +1391,56 @@ h2, h3 { font-family: var(--font-subheading); letter-spacing: 0.5px; }
 
 .framework-accordion-panel { padding: 0 4px 32px; }
 
+/* ---------- Nested sub-accordion (e.g. Chakra System's 4 parts) ---------- */
+.framework-accordion-sub {
+  margin-top: 20px;
+  padding-left: 20px;
+  border-left: 2px solid rgba(201, 168, 76, 0.35);
+}
+
+.framework-accordion-sub .framework-accordion-toggle {
+  font-size: 0.95rem;
+  padding: 16px 4px;
+}
+
+.framework-accordion-sub .framework-accordion-panel { padding: 0 4px 24px; }
+
+/* ---------- Simple CSS flow diagram (Nadis / Dosha-Chakra convergence) ---------- */
+.flow-diagram {
+  max-width: 440px;
+  margin: 28px auto 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.flow-diagram-item {
+  background: #fff;
+  border: 1px solid rgba(13, 43, 107, 0.12);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-soft);
+  padding: 10px 20px;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--navy);
+}
+
+.flow-diagram-arrow {
+  color: var(--gold);
+  font-size: 1.1rem;
+  line-height: 1;
+  text-align: center;
+  margin: 2px 0;
+}
+
+.flow-diagram-caption {
+  text-align: center;
+  font-size: 0.78rem;
+  font-style: italic;
+  color: var(--ink-soft);
+  margin-top: 10px;
+}
+
 /* ---------- Gnōthi Seautón quiz ---------- */
 .gnothi-progress-track {
   max-width: 640px;
