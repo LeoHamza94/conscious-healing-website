@@ -1695,6 +1695,151 @@ h2, h3 { font-family: var(--font-subheading); letter-spacing: 0.5px; }
 .gnothi-chakra-tag-compensating { border-color: var(--gold); color: var(--navy); }
 .gnothi-chakra-tag-oscillating { border-color: var(--navy); color: var(--navy); }
 
+/* ---------- 7-Chakra Tissue State Assessment (separate quiz, shares only visual styling with Gnōthi Seautón) ---------- */
+.chakra-quiz-progress-track {
+  max-width: 640px;
+  margin: 0 auto 12px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(13, 43, 107, 0.1);
+  overflow: hidden;
+}
+
+.chakra-quiz-progress-fill {
+  height: 100%;
+  background: var(--gold);
+  transition: width var(--transition);
+}
+
+.chakra-quiz-question-card {
+  max-width: 640px;
+  margin: 40px auto 0;
+  background: #fff;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-soft);
+  border: 1px solid rgba(13, 43, 107, 0.06);
+  padding: 40px;
+  text-align: center;
+}
+
+.chakra-quiz-question-counter {
+  font-family: var(--font-subheading);
+  font-size: 0.75rem;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin: 6px 0 20px;
+}
+
+.chakra-quiz-options {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.chakra-quiz-option {
+  background: var(--cream);
+  border: 1.5px solid rgba(13, 43, 107, 0.15);
+  border-radius: 10px;
+  padding: 16px 22px;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.chakra-quiz-option:hover {
+  border-color: var(--gold);
+  background: #fff;
+}
+
+.chakra-quiz-option.selected {
+  border-color: var(--gold);
+  background: #fff;
+  box-shadow: 0 0 0 1px var(--gold);
+}
+
+.chakra-quiz-option-letter {
+  display: inline-block;
+  font-family: var(--font-subheading);
+  font-weight: 600;
+  color: var(--gold);
+  margin-right: 8px;
+}
+
+.chakra-quiz-nav-row {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 24px;
+}
+
+.chakra-quiz-result-tag {
+  display: inline-block;
+  font-family: var(--font-subheading);
+  font-size: 0.72rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--navy);
+  background: rgba(201, 168, 76, 0.18);
+  border: 1px solid var(--gold);
+  border-radius: 999px;
+  padding: 6px 16px;
+  margin-top: 16px;
+}
+
+.chakra-quiz-composite {
+  max-width: 720px;
+  margin: 0 auto 40px;
+  background: var(--navy);
+  color: var(--cream);
+  border-radius: var(--radius);
+  padding: 40px;
+  text-align: center;
+}
+
+.chakra-quiz-composite p {
+  font-family: var(--font-subheading);
+  font-size: 1.15rem;
+  line-height: 1.8;
+}
+
+.chakra-quiz-tally {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  max-width: 640px;
+  margin: 0 auto 40px;
+}
+
+.chakra-quiz-tally-item {
+  font-family: var(--font-subheading);
+  font-size: 0.78rem;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  background: #fff;
+  border: 1px solid rgba(13, 43, 107, 0.1);
+  border-radius: 999px;
+  padding: 8px 18px;
+}
+
+.chakra-quiz-tally-item strong { color: var(--navy); }
+
+.chakra-quiz-matrix {
+  max-width: 900px;
+  margin: 0 auto 40px;
+}
+
+.chakra-quiz-matrix h3 {
+  text-align: center;
+  font-size: 1.3rem;
+  color: var(--navy);
+  margin-bottom: 24px;
+}
+
 /* ---------- Responsive ---------- */
 @media (max-width: 900px) {
   .two-column,
