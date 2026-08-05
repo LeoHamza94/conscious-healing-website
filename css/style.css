@@ -1391,20 +1391,6 @@ h2, h3 { font-family: var(--font-subheading); letter-spacing: 0.5px; }
 
 .framework-accordion-panel { padding: 0 4px 32px; }
 
-/* ---------- Nested sub-accordion (e.g. Chakra System's 4 parts) ---------- */
-.framework-accordion-sub {
-  margin-top: 20px;
-  padding-left: 20px;
-  border-left: 2px solid rgba(201, 168, 76, 0.35);
-}
-
-.framework-accordion-sub .framework-accordion-toggle {
-  font-size: 0.95rem;
-  padding: 16px 4px;
-}
-
-.framework-accordion-sub .framework-accordion-panel { padding: 0 4px 24px; }
-
 /* ---------- Simple CSS flow diagram (Nadis / Dosha-Chakra convergence) ---------- */
 .flow-diagram {
   max-width: 440px;
