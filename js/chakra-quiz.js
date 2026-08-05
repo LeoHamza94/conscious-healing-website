@@ -89,42 +89,41 @@ const CHAKRA_QUIZ_RESULTS = {
     title: 'The Harmonized Terrain',
     text: 'Your vital force, tissue structures, and mineral pathways are in steady communication. Energy moves smoothly through your nadis, keeping your physical organs toned and your emotional states resilient.',
   },
-  deficient: {
-    title: 'The Atrophied / High-Vata Terrain',
-    text: 'Your system is calling for deep nourishment, structural lipids, and grounding minerals. Energy is scattering upward and outward, leaving your lower tissue circuits running cold, dry, or physically depleted. Focus on building and moisturizing therapies.',
-  },
-  excessive: {
-    title: 'The Stagnant / Damp-Heat Terrain',
-    text: 'Your system is processing heavy fluid accumulation, metabolic waste, or localized inflammatory heat. Vital energy is being blocked or congested within the tissue matrix, requiring clearing, moving, and cooling botanical catalysts to restore circulation.',
-  },
-  mixed: {
-    title: 'Mixed Circuit State',
-    text: 'Your system shows a crossover pattern — pockets of depletion alongside pockets of stagnation. This mixed terrain reflects the three-circuit crossover concept explored in the Apothecary: certain circuits running dry and thin, while others are simultaneously blocked and congested.',
-  },
 };
 
-const CHAKRA_QUIZ_MATRIX = {
-  deficient: {
-    result: 'Deficient',
-    anchor: 'deficient-state',
-    action: 'Moisten, Nourish, &amp; Tonify',
-    constituents: 'Mucilage, Fixed Oils, Saponins',
-    herbs: 'Marshmallow Root, Shatavari, Licorice Root, Flaxseed',
-  },
-  excessiveDamp: {
-    result: 'Excessive (Damp)',
-    anchor: 'excessive-state',
-    action: 'Dry, Drain, &amp; Circulate',
-    constituents: 'Tannins, Volatile Oils, Resins',
-    herbs: 'Cranesbill Root, Calendula, Ginger, Myrrh',
-  },
-  excessiveHeat: {
-    result: 'Excessive (Heat)',
-    anchor: 'excessive-state',
-    action: 'Cool, Sedate, &amp; Clear',
-    constituents: 'Flavonoids, Iridoid Glycosides, Alkaloids',
-    herbs: 'Meadowsweet, Willow Bark, Skullcap, Blue Vervain',
-  },
+// Canonical bottom-to-top order — every priority/tie-break rule below walks
+// the chakras in this order.
+const CHAKRA_ORDER = ['root', 'sacral', 'solar-plexus', 'heart', 'throat', 'third-eye', 'crown'];
+
+const CHAKRA_INFO = {
+  root: { name: 'Root', sanskrit: 'Muladhara', formulaNumber: 1 },
+  sacral: { name: 'Sacral', sanskrit: 'Svadhisthana', formulaNumber: 2 },
+  'solar-plexus': { name: 'Solar Plexus', sanskrit: 'Manipura', formulaNumber: 3 },
+  heart: { name: 'Heart', sanskrit: 'Anahata', formulaNumber: 4 },
+  throat: { name: 'Throat', sanskrit: 'Vishuddha', formulaNumber: 5 },
+  'third-eye': { name: 'Third Eye', sanskrit: 'Ajna', formulaNumber: 6 },
+  crown: { name: 'Crown', sanskrit: 'Sahasrara', formulaNumber: 7 },
+};
+
+// Rules 1 & 2 (the Drain Law / Backpressure Law, with the Root & Crown
+// boundary exceptions already baked directly into their two rows) as a
+// straight chakra+state -> formula lookup, keyed exactly the way the spec's
+// routing chart lays it out.
+const CHAKRA_ROUTING_CHART = {
+  'root:deficient': { formulaChakra: 'sacral', rationale: "Sacral fluid boundaries are hoarding energy, starving the root support." },
+  'root:excessive': { formulaChakra: 'sacral', rationale: "The pelvic floor is bottlenecked, trapping survival energy at the base." },
+  'sacral:deficient': { formulaChakra: 'root', rationale: "The base lacks structural grounding to safely hold and build fluid vitality." },
+  'sacral:excessive': { formulaChakra: 'solar-plexus', rationale: "The upper fire gate is blocked, forcing pelvic fluids to pool and stagnate." },
+  'solar-plexus:deficient': { formulaChakra: 'sacral', rationale: "Lower fluid stagnation is drowning out and cooling your digestion." },
+  'solar-plexus:excessive': { formulaChakra: 'heart', rationale: "Heart-centered restriction is forcing gastric fire to burn hot and trap heat." },
+  'heart:deficient': { formulaChakra: 'solar-plexus', rationale: "Sluggish metabolic fire fails to drive circulation into the chest cavity." },
+  'heart:excessive': { formulaChakra: 'throat', rationale: "An expressive throat bottleneck is trapping vascular pressure in the chest." },
+  'throat:deficient': { formulaChakra: 'heart', rationale: "Emotional guarding in the chest keeps vocal expression from rising." },
+  'throat:excessive': { formulaChakra: 'third-eye', rationale: "Neurological overstimulation from above is flooding and irritating the throat." },
+  'third-eye:deficient': { formulaChakra: 'throat', rationale: "A tight, swallowed vocal block is starving the upper mind of clear circulation." },
+  'third-eye:excessive': { formulaChakra: 'crown', rationale: "Cognitive pressure cannot safely ascend and clear." },
+  'crown:deficient': { formulaChakra: 'third-eye', rationale: "The master switchboard below is too literal, blocking universal integration." },
+  'crown:excessive': { formulaChakra: 'third-eye', rationale: "Neural excitotoxicity below is forcing consciousness to float out of the body." },
 };
 
 // ---------------------------------------------------------------------------
@@ -188,71 +187,147 @@ function goToPreviousChakraQuizQuestion() {
 }
 
 // ---------------------------------------------------------------------------
-// Scoring
+// Scoring — per-chakra states + the two-layer routing engine (Rules 1-3)
 // ---------------------------------------------------------------------------
-function tallyChakraQuizAnswers() {
-  const tally = { balanced: 0, deficient: 0, excessive: 0 };
+
+// { root: 'balanced', sacral: 'deficient', ... } — one entry per chakra,
+// straight from the live in-progress answers.
+function getChakraStatesFromAnswers() {
+  const states = {};
   chakraQuizAnswers.forEach((a) => {
-    tally[a.state] += 1;
+    states[a.questionId] = a.state;
+  });
+  return states;
+}
+
+function tallyChakraStates(states) {
+  const tally = { balanced: 0, deficient: 0, excessive: 0 };
+  CHAKRA_ORDER.forEach((id) => {
+    const state = states[id];
+    if (state && tally[state] !== undefined) tally[state] += 1;
   });
   return tally;
 }
 
-function computeChakraQuizResult(tally) {
-  // Explicit rule: a Deficient/Excessive tie is always "mixed," regardless
-  // of how high Balanced's count is. Excludes the trivial 0-0 case (e.g. a
-  // fully Balanced result), which isn't a real crossover pattern.
-  if (tally.deficient === tally.excessive && tally.deficient > 0) {
-    return 'mixed';
+// Rule 3 — Weighted Hierarchy Engine. Decides which single chakra is the
+// "Symptomatic Node," and whether a true same-tier tie also produces a
+// secondary "Supporting the Surrounding Terrain" mention.
+function resolveChakraQuizPriority(states) {
+  const imbalanced = CHAKRA_ORDER.filter((id) => states[id] && states[id] !== 'balanced');
+
+  if (imbalanced.length === 0) {
+    return { allBalanced: true, primary: null, secondary: null };
   }
-  const max = Math.max(tally.balanced, tally.deficient, tally.excessive);
-  if (tally.balanced === max) return 'balanced';
-  if (tally.deficient === max) return 'deficient';
-  return 'excessive';
+
+  // First priority: Solar Plexus wins outright, regardless of what else is
+  // imbalanced. Only one Solar Plexus exists, so this branch can never
+  // itself produce a tie.
+  if (states['solar-plexus'] && states['solar-plexus'] !== 'balanced') {
+    return {
+      allBalanced: false,
+      primary: { chakraId: 'solar-plexus', state: states['solar-plexus'] },
+      secondary: null,
+    };
+  }
+
+  // Second priority (Solar Plexus balanced): Excessive beats Deficient.
+  // A true tie within the deciding tier (e.g. three chakras all Deficient)
+  // is broken by canonical Root-to-Crown order; the runner-up becomes the
+  // optional secondary mention.
+  const excessiveTier = imbalanced.filter((id) => states[id] === 'excessive');
+  const decidingTier = excessiveTier.length ? excessiveTier : imbalanced.filter((id) => states[id] === 'deficient');
+
+  const primaryId = decidingTier[0];
+  const secondaryId = decidingTier.length > 1 ? decidingTier[1] : null;
+
+  return {
+    allBalanced: false,
+    primary: { chakraId: primaryId, state: states[primaryId] },
+    secondary: secondaryId ? { chakraId: secondaryId, state: states[secondaryId] } : null,
+  };
 }
 
-function buildMatrixRows(resultKey) {
-  if (resultKey === 'deficient') return [CHAKRA_QUIZ_MATRIX.deficient];
-  if (resultKey === 'excessive') return [CHAKRA_QUIZ_MATRIX.excessiveDamp, CHAKRA_QUIZ_MATRIX.excessiveHeat];
-  if (resultKey === 'mixed') return [CHAKRA_QUIZ_MATRIX.deficient, CHAKRA_QUIZ_MATRIX.excessiveDamp, CHAKRA_QUIZ_MATRIX.excessiveHeat];
-  return []; // balanced — no corrective matrix needed
+// Looks up Rules 1 & 2 for one chakra+state pair and packages it with
+// display-ready names.
+function getRoutingResult(chakraId, state) {
+  const routing = CHAKRA_ROUTING_CHART[`${chakraId}:${state}`];
+  const formulaInfo = CHAKRA_INFO[routing.formulaChakra];
+  return {
+    chakraId,
+    state,
+    chakraName: CHAKRA_INFO[chakraId].name,
+    formulaChakraId: routing.formulaChakra,
+    formulaName: formulaInfo.name,
+    formulaNumber: formulaInfo.formulaNumber,
+    rationale: routing.rationale,
+  };
 }
 
-// Pass { savedTally, savedResultKey } to render a member's previously saved
+function capitalizeState(state) {
+  return state.charAt(0).toUpperCase() + state.slice(1);
+}
+
+// Pass { savedStates } to render a member's previously saved per-chakra
 // result (e.g. on page load) without touching the live in-progress answers
 // or re-saving to Firestore. Called with no arguments, it scores whatever is
 // in chakraQuizAnswers, as it always has.
 function showChakraQuizResults(options) {
-  const { savedTally, savedResultKey } = options || {};
+  const { savedStates } = options || {};
+  const isRestoring = Boolean(savedStates);
 
   document.getElementById('chakra-quiz-intro').hidden = true;
   document.getElementById('chakra-quiz-quiz').hidden = true;
   const resultsSection = document.getElementById('chakra-quiz-results');
   resultsSection.hidden = false;
 
-  const isRestoring = Boolean(savedTally && savedResultKey);
-  let tally, resultKey;
-  if (isRestoring) {
-    tally = savedTally;
-    resultKey = savedResultKey;
-  } else {
-    tally = tallyChakraQuizAnswers();
-    resultKey = computeChakraQuizResult(tally);
+  const states = isRestoring ? savedStates : getChakraStatesFromAnswers();
 
-    // Members only: save this fresh result so it's waiting for them next
-    // visit. Logged-out visitors are unaffected — nothing is saved, and the
-    // quiz behaves exactly as it did before.
-    if (window.CHMembership && window.CHMembership.currentUser()) {
-      window.CHMembership
-        .saveMemberFields({ chakraQuizResult: resultKey, chakraQuizTally: tally })
-        .catch((err) => console.error('Failed to save chakra quiz result:', err));
-    }
+  // Members only: save this fresh result so it's waiting for them next
+  // visit. Logged-out visitors are unaffected — nothing is saved, and the
+  // quiz behaves exactly as it did before.
+  if (!isRestoring && window.CHMembership && window.CHMembership.currentUser()) {
+    window.CHMembership
+      .saveMemberFields({ chakraQuizStates: states })
+      .catch((err) => console.error('Failed to save chakra quiz result:', err));
   }
 
-  const profile = CHAKRA_QUIZ_RESULTS[resultKey];
+  const tally = tallyChakraStates(states);
+  const priority = resolveChakraQuizPriority(states);
 
-  document.getElementById('chakra-quiz-result-tag').textContent = profile.title;
-  document.getElementById('chakra-quiz-composite-text').innerHTML = `<p>${profile.text}</p>`;
+  const tagEl = document.getElementById('chakra-quiz-result-tag');
+  const compositeEl = document.getElementById('chakra-quiz-composite-text');
+  const matrixWrap = document.getElementById('chakra-quiz-matrix-wrap');
+
+  if (priority.allBalanced) {
+    const profile = CHAKRA_QUIZ_RESULTS.balanced;
+    tagEl.textContent = profile.title;
+    compositeEl.innerHTML = `<p>${profile.text}</p>`;
+    matrixWrap.innerHTML = '<p style="text-align:center; color: var(--ink-soft); font-size: 0.95rem;">Your terrain doesn\'t call for active correcting right now — maintenance-focused herbs and steady lifestyle support are enough to keep it there.</p>';
+  } else {
+    const primaryRouting = getRoutingResult(priority.primary.chakraId, priority.primary.state);
+
+    tagEl.textContent = `Symptomatic Node: ${primaryRouting.chakraName} (${capitalizeState(primaryRouting.state)})`;
+    compositeEl.innerHTML = `<p>${primaryRouting.rationale}</p>`;
+
+    let matrixHtml = `
+      <div class="chakra-quiz-routing-card">
+        <p class="chakra-quiz-routing-label">Recommended Formula</p>
+        <p class="chakra-quiz-routing-formula">${primaryRouting.formulaName} <span>(Formula ${primaryRouting.formulaNumber})</span></p>
+      </div>
+    `;
+
+    if (priority.secondary) {
+      const secondaryRouting = getRoutingResult(priority.secondary.chakraId, priority.secondary.state);
+      matrixHtml += `
+        <div class="chakra-quiz-secondary">
+          <h4>Supporting the Surrounding Terrain</h4>
+          <p>Your ${secondaryRouting.chakraName} chakra scored ${capitalizeState(secondaryRouting.state)} as well. ${secondaryRouting.rationale} You may also want to explore the ${secondaryRouting.formulaName} Formula (Formula ${secondaryRouting.formulaNumber}) as an additional, optional support.</p>
+        </div>
+      `;
+    }
+
+    matrixWrap.innerHTML = matrixHtml;
+  }
 
   const tallyWrap = document.getElementById('chakra-quiz-tally');
   tallyWrap.innerHTML = `
@@ -260,40 +335,6 @@ function showChakraQuizResults(options) {
     <span class="chakra-quiz-tally-item"><strong>${tally.deficient}</strong> <a href="chakra-system.html#deficient-state" style="color: var(--gold); text-decoration: underline;">Deficient</a></span>
     <span class="chakra-quiz-tally-item"><strong>${tally.excessive}</strong> <a href="chakra-system.html#excessive-state" style="color: var(--gold); text-decoration: underline;">Excessive</a></span>
   `;
-
-  const matrixWrap = document.getElementById('chakra-quiz-matrix-wrap');
-  const rows = buildMatrixRows(resultKey);
-  if (!rows.length) {
-    matrixWrap.innerHTML = '<p style="text-align:center; color: var(--ink-soft); font-size: 0.95rem;">Your terrain doesn\'t call for active correcting right now — maintenance-focused herbs and steady lifestyle support are enough to keep it there.</p>';
-  } else {
-    const rowsHtml = rows
-      .map(
-        (r) => `
-      <tr>
-        <td><strong><a href="chakra-system.html#${r.anchor}" style="color: var(--gold); text-decoration: underline;">${r.result}</a></strong></td>
-        <td>${r.action}</td>
-        <td>${r.constituents}</td>
-        <td>${r.herbs}</td>
-      </tr>`
-      )
-      .join('');
-    matrixWrap.innerHTML = `
-      <h3>Phytochemical Matrix</h3>
-      <div class="table-wrap">
-        <table class="info-table">
-          <thead>
-            <tr>
-              <th>Result</th>
-              <th>Key Botanical Action</th>
-              <th>Core Phytochemical Constituents</th>
-              <th>Example Herbs (educational mention only)</th>
-            </tr>
-          </thead>
-          <tbody>${rowsHtml}</tbody>
-        </table>
-      </div>
-    `;
-  }
 
   // Skip the auto-scroll when silently restoring a saved result on page
   // load — nothing to scroll "down to" since the visitor hasn't clicked
@@ -341,8 +382,8 @@ function initChakraQuiz() {
       window.CHMembership
         .getMemberDoc()
         .then((data) => {
-          if (data && data.chakraQuizResult && data.chakraQuizTally) {
-            showChakraQuizResults({ savedTally: data.chakraQuizTally, savedResultKey: data.chakraQuizResult });
+          if (data && data.chakraQuizStates) {
+            showChakraQuizResults({ savedStates: data.chakraQuizStates });
           }
         })
         .catch((err) => console.error('Failed to load saved chakra quiz result:', err));
