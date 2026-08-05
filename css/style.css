@@ -1840,6 +1840,98 @@ h2, h3 { font-family: var(--font-subheading); letter-spacing: 0.5px; }
   margin-bottom: 24px;
 }
 
+/* ---------- Quiz picker (choose Gnōthi Seautón or the Chakra quiz) ---------- */
+.quiz-picker {
+  position: relative;
+  display: inline-block;
+  margin: 28px auto 0;
+}
+
+.quiz-picker-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fff;
+  border: 1.5px solid rgba(13, 43, 107, 0.15);
+  border-radius: 999px;
+  padding: 12px 24px;
+  font-family: var(--font-subheading);
+  font-size: 0.78rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--navy);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.quiz-picker-toggle:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+.quiz-picker-caret {
+  color: var(--gold);
+  transition: transform var(--transition);
+  font-size: 0.7rem;
+}
+
+.quiz-picker.open .quiz-picker-caret { transform: rotate(180deg); }
+
+.quiz-picker-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%) translateY(-8px);
+  min-width: 300px;
+  background: var(--cream);
+  border: 1px solid rgba(13, 43, 107, 0.1);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-soft);
+  padding: 8px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--transition), transform var(--transition), visibility var(--transition);
+  z-index: 50;
+  text-align: left;
+}
+
+.quiz-picker.open .quiz-picker-menu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+.quiz-picker-menu a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 14px;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--navy);
+  border-radius: 6px;
+  transition: background var(--transition), color var(--transition);
+}
+
+.quiz-picker-menu a:hover {
+  background: rgba(201, 168, 76, 0.12);
+  color: var(--gold);
+}
+
+.quiz-picker-current-tag {
+  font-family: var(--font-subheading);
+  font-size: 0.6rem;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  background: rgba(13, 43, 107, 0.06);
+  padding: 3px 8px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
 /* ---------- Responsive ---------- */
 @media (max-width: 900px) {
   .two-column,
