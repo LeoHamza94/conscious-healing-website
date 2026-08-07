@@ -1902,6 +1902,21 @@ h2, h3 { font-family: var(--font-subheading); letter-spacing: 0.5px; }
   font-size: 0.9rem;
 }
 
+/* ---------- ASCII diagram blocks (Biochemistry: Herbal Actions & Plant Chemistry) ---------- */
+.ascii-diagram {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  background: #fff;
+  border: 1px solid rgba(13, 43, 107, 0.15);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  overflow-x: auto;
+  white-space: pre;
+  color: var(--navy);
+  margin: 24px 0;
+}
+
 /* ---------- Responsive ---------- */
 @media (max-width: 900px) {
   .two-column,
