@@ -31,11 +31,13 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 const CONVERTKIT_API_KEY = "kit_a3535d15a99a453aedb1e36739869e59";
+const CONVERTKIT_TAG_ID = "22373653"; // "Signed up via website" tag, created in Kit for this integration
 
 // Subscribes a new member's email to Kit (Herb of the Week, video
-// announcements, promotions). Uses Kit's V4 API key header (X-Kit-Api-Key)
-// — this key is scoped to write-only actions like this and can't read/list/
-// export subscriber data, so it's safe to call directly from client-side JS.
+// announcements, promotions) and tags them "Signed up via website". Uses
+// Kit's V4 API key header (X-Kit-Api-Key) — this key is scoped to write-only
+// actions like this and can't read/list/export subscriber data, so it's safe
+// to call directly from client-side JS.
 //
 // This calls "Create a subscriber" (POST /v4/subscribers) rather than
 // "Add subscriber to form by email address" (POST /v4/forms/{id}/subscribers).
@@ -43,11 +45,11 @@ const CONVERTKIT_API_KEY = "kit_a3535d15a99a453aedb1e36739869e59";
 // they're "embed" type (an inline JS widget), and Kit's V4 form-subscribe
 // action appears to only support hosted/landing-page-type forms, not embeds.
 // Creating the subscriber directly is what actually works (verified live:
-// 201 Created) and still adds them to the account's active subscriber list,
-// which is all the current integration needs. If Leonidas wants subscribers
-// specifically tagged/tied to the "Conscious-Healing Membership" form's own
-// Kit automations, that likely needs a Kit-side Tag applied here instead,
-// or converting that form to a landing-page type in Kit's dashboard.
+// 201 Created). Since there's no automation on the form itself yet, the
+// lighter-touch fix is a Kit Tag instead of converting the form to a
+// landing page — applied via "Tag a subscriber by email address"
+// (POST /v4/tags/{tag_id}/subscribers) right after the subscriber is
+// created, so the tag survives even for a subscriber who already existed.
 async function subscribeToConvertKit(email) {
   const response = await fetch("https://api.kit.com/v4/subscribers", {
     method: "POST",
@@ -59,6 +61,21 @@ async function subscribeToConvertKit(email) {
   });
   if (!response.ok) {
     throw new Error(`ConvertKit subscribe failed with status ${response.status}`);
+  }
+
+  const tagResponse = await fetch(`https://api.kit.com/v4/tags/${CONVERTKIT_TAG_ID}/subscribers`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Kit-Api-Key": CONVERTKIT_API_KEY,
+    },
+    body: JSON.stringify({ email_address: email }),
+  });
+  if (!tagResponse.ok) {
+    // The subscriber was created successfully even if tagging fails — don't
+    // fail the whole signup over a missing tag, just surface it for
+    // debugging.
+    console.error(`ConvertKit tag apply failed with status ${tagResponse.status}`);
   }
 }
 
