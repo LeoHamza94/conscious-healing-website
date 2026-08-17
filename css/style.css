@@ -1363,6 +1363,14 @@ h2, h3 { font-family: var(--font-subheading); letter-spacing: 0.5px; }
 
 .framework-accordion-item {
   border-bottom: 1px solid rgba(13, 43, 107, 0.1);
+  /* As this list grows into the hundreds of entries, skip layout/paint work
+     for items scrolled off-screen (collapsed or not). The browser substitutes
+     the contain-intrinsic-size estimate for skipped items and re-renders them
+     normally the moment they approach the viewport, so scrolling and anchor
+     jumps (#letter-x, map results links) are unaffected. Unsupported browsers
+     (older Safari) simply ignore this and render as before. */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 130px;
 }
 
 .framework-accordion-toggle {
