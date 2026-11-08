@@ -34,7 +34,9 @@ const CONVERTKIT_API_KEY = "kit_a3535d15a99a453aedb1e36739869e59";
 const CONVERTKIT_TAG_ID = "22373653"; // "Signed up via website" tag, created in Kit for this integration
 
 // Subscribes a new member's email to Kit (Herb of the Week, video
-// announcements, promotions) and tags them "Signed up via website". Uses
+// announcements, promotions) and tags them "Signed up via website". Only
+// called when the member ticks the optional email-list checkbox on the
+// sign-up form (it is unchecked by default). Uses
 // Kit's V4 API key header (X-Kit-Api-Key) — this key is scoped to write-only
 // actions like this and can't read/list/export subscriber data, so it's safe
 // to call directly from client-side JS.
@@ -79,9 +81,13 @@ async function subscribeToConvertKit(email) {
   }
 }
 
-// Creates the member's Firestore record on signup. `emailListStatus` reflects
-// whether the Kit subscribe call actually succeeded, so a failure is visible
-// in Firestore (and re-triable later) rather than silently lost.
+// Creates the member's Firestore record on signup. `emailListStatus` is one of:
+//   "not_requested" — the member left the email-list checkbox unticked, so
+//                     nothing was sent to Kit;
+//   "subscribed"    — they ticked it and the Kit subscribe call succeeded;
+//   "failed"        — they ticked it but the Kit call failed, so the failure
+//                     is visible in Firestore (and re-triable later) rather
+//                     than silently lost.
 async function createMemberRecord(user, name, emailListStatus) {
   await setDoc(doc(db, "members", user.uid), {
     email: user.email,
@@ -142,6 +148,10 @@ function buildModal() {
           <label class="auth-modal-consent">
             <input type="checkbox" id="auth-signup-consent" required>
             <span>I agree to the <a href="terms.html" target="_blank" rel="noopener">Terms &amp; Conditions</a></span>
+          </label>
+          <label class="auth-modal-consent">
+            <input type="checkbox" id="auth-signup-newsletter">
+            <span>Email me Herb of the Week, video announcements, and promotions (optional)</span>
           </label>
           <button type="submit" class="btn btn-primary">Create My Free Account</button>
         </form>
@@ -257,12 +267,17 @@ function initAuthModal(triggers) {
         await updateProfile(cred.user, { displayName: name });
       }
 
-      let emailListStatus = "failed";
-      try {
-        await subscribeToConvertKit(email);
-        emailListStatus = "subscribed";
-      } catch (ckErr) {
-        console.error("ConvertKit subscribe failed:", ckErr);
+      // Only members who ticked the (unchecked-by-default) email-list box are
+      // sent to Kit. A Kit failure never blocks the signup itself.
+      let emailListStatus = "not_requested";
+      if (overlay.querySelector("#auth-signup-newsletter").checked) {
+        emailListStatus = "failed";
+        try {
+          await subscribeToConvertKit(email);
+          emailListStatus = "subscribed";
+        } catch (ckErr) {
+          console.error("ConvertKit subscribe failed:", ckErr);
+        }
       }
 
       await createMemberRecord(cred.user, name, emailListStatus);

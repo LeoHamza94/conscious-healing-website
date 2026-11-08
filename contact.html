@@ -120,29 +120,20 @@
     <div class="container">
 
       <!--
-        Static form markup below. Since this site is hosted on GitHub Pages
-        (no server-side code), wire this form up to a form backend such as
-        Formspree, Netlify Forms, or Getform by adding an action="" URL and
-        method="POST" to the <form> tag.
+        The contact form was replaced with a direct email link because this
+        site is hosted on GitHub Pages (no server-side code) and no form
+        backend is connected yet. To bring a form back: add a <form> with
+        action="https://formspree.io/f/YOUR_FORM_ID" method="POST" and
+        name/email/message fields, then update privacy.html (Sections 2, 3
+        and 6) to mention Formspree again.
       -->
-      <form class="form-card" id="contact-form">
-        <div class="form-group">
-          <label for="name">Name</label>
-          <input type="text" id="name" name="name" required>
-        </div>
-        <div class="form-group">
-          <label for="email">Email</label>
-          <input type="email" id="email" name="email" required>
-        </div>
-        <div class="form-group">
-          <label for="message">Message</label>
-          <textarea id="message" name="message" required></textarea>
-        </div>
-        <button type="submit" class="btn btn-primary" style="width: 100%;">Submit</button>
-      </form>
+      <div class="form-card" style="text-align: center;">
+        <p style="color: var(--ink-soft); font-size: 1.05rem; margin-bottom: 28px;">Questions, feedback, or just want to say hello? Send us an email.</p>
+        <a href="mailto:theconscioushealingpyramid@gmail.com" class="btn btn-primary">Email Us</a>
+      </div>
 
       <div class="contact-info">
-        <a href="mailto:conscioushealingwellness@gmail.com" class="contact-email">conscioushealingwellness@gmail.com</a>
+        <a href="mailto:theconscioushealingpyramid@gmail.com" class="contact-email">theconscioushealingpyramid@gmail.com</a>
 
         <div class="social-row">
           <a href="https://instagram.com" target="_blank" rel="noopener" aria-label="Instagram">IG</a>
